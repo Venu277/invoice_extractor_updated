@@ -1,9 +1,11 @@
 #![no_std]
 #![no_main]
-
-mod vga_buffer;
+#![feature(custom_test_frameworks)]
+#![test_runner(micro_os::test_runner)]
+#![reexport_test_harness_main = "test_main"]
 
 use core::panic::PanicInfo;
+use micro_os::println;
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
@@ -11,17 +13,23 @@ pub extern "C" fn _start() -> ! {
     println!("   MicroOS v0.2 - written in Rust");
     println!("==============================");
     println!("Kernel booted successfully!");
-    println!("1 + 2 = {}", 1 + 2);
+    micro_os::serial_println!("Serial port works too!");
 
-    loop {
-        x86_64::instructions::hlt();
-    }
+    #[cfg(test)]
+    test_main();
+
+    micro_os::hlt_loop();
 }
 
+#[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("KERNEL PANIC: {}", info);
-    loop {
-        x86_64::instructions::hlt();
-    }
+    micro_os::hlt_loop();
+}
+
+#[cfg(test)]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    micro_os::test_panic_handler(info)
 }

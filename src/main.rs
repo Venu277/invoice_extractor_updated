@@ -1,23 +1,27 @@
 #![no_std]
 #![no_main]
 
-use core::panic::PanicInfo;
+mod vga_buffer;
 
-static HELLO: &[u8] = b"Hello from my Rust OS!";
+use core::panic::PanicInfo;
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    let vga = 0xb8000 as *mut u8;
-    for (i, &byte) in HELLO.iter().enumerate() {
-        unsafe {
-            *vga.offset(i as isize * 2) = byte;
-            *vga.offset(i as isize * 2 + 1) = 0xb;
-        }
+    println!("==============================");
+    println!("   MicroOS v0.2 - written in Rust");
+    println!("==============================");
+    println!("Kernel booted successfully!");
+    println!("1 + 2 = {}", 1 + 2);
+
+    loop {
+        x86_64::instructions::hlt();
     }
-    loop {}
 }
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
-    loop {}
+fn panic(info: &PanicInfo) -> ! {
+    println!("KERNEL PANIC: {}", info);
+    loop {
+        x86_64::instructions::hlt();
+    }
 }

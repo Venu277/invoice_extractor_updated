@@ -1,4 +1,5 @@
 import logging
+import os
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
@@ -16,6 +17,10 @@ scheduler = BackgroundScheduler()
 
 
 def start_scheduler():
+    if os.getenv("VERCEL") == "1":
+        logger.info("InvoiceIQ background scheduler is disabled on Vercel.")
+        return
+
     if not scheduler.running:
         # 1. Due alerts: run daily at 08:00 AM (and every 6 hours)
         scheduler.add_job(

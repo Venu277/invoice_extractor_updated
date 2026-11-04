@@ -261,6 +261,26 @@ The blueprint runs these commands, which you can also enter manually:
 - **Backups.** The in-app file backup is for SQLite. On PostgreSQL, rely on Render's database backups.
 - **Free plan.** The service may sleep when idle, so the first request after a pause can be slow.
 
+## Deploying to Vercel
+
+Vercel serves the FastAPI application as a serverless function. The Vercel entrypoint is configured in `pyproject.toml`; the root `app.py` is a legacy Streamlit application and is not used for this deployment.
+
+Before deploying, connect a persistent PostgreSQL database and configure these Vercel environment variables for Production (and Preview if previews will be used):
+
+| Variable | Value |
+|---|---|
+| `APP_ENV` | `production` |
+| `DEBUG` | `false` |
+| `SECRET_KEY` | A newly generated random secret, for example `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
+| `DATABASE_URL` | The PostgreSQL connection URL from your database provider |
+| `UPLOAD_DIR` | `/tmp/axion/uploads` |
+| `LOG_DIR` | `/tmp/axion/logs` |
+| `BACKUP_DIR` | `/tmp/axion/backups` |
+
+Uploaded files and local backups on Vercel's `/tmp` filesystem are temporary and can disappear when a function instance is recycled. Use external object storage if uploaded invoices must persist. The app's in-process scheduled jobs are disabled on Vercel; configure an external scheduler if those jobs are required.
+
+After setting up the database, run `alembic upgrade head` against it once, then deploy the linked GitHub repository (`Venu277/invoice_extractor_updated`) from Vercel. Do not use the local SQLite database for a hosted deployment.
+
 ## API
 
 Every feature in the web interface is also available through the REST API under `/api/v1`. Browse and try every endpoint at `/docs`. Sessions use JWT, and the same role permissions apply to the API and the web pages.

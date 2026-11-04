@@ -263,7 +263,7 @@ The blueprint runs these commands, which you can also enter manually:
 
 ## Deploying to Vercel
 
-Vercel serves the FastAPI application as a serverless function. The Vercel entrypoint is configured in `pyproject.toml`; the root `app.py` is a legacy Streamlit application and is not used for this deployment.
+Vercel serves the FastAPI application as a serverless function and detects it from `app/main.py`; the root `app.py` is a legacy Streamlit application and is not used for this deployment.
 
 Before deploying, connect a persistent PostgreSQL database and configure these Vercel environment variables for Production (and Preview if previews will be used):
 

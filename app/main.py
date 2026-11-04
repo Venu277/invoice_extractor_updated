@@ -1,3 +1,4 @@
+import os
 import uuid
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Response
@@ -19,7 +20,8 @@ setup_logging()
 async def lifespan(app: FastAPI):
     # Startup: Ensure runtime directories exist, start scheduler
     from pathlib import Path
-    Path("data").mkdir(parents=True, exist_ok=True)
+    if os.getenv("VERCEL") != "1":
+        Path("data").mkdir(parents=True, exist_ok=True)
     Path(settings.UPLOAD_DIR).mkdir(parents=True, exist_ok=True)
     Path(settings.BACKUP_DIR).mkdir(parents=True, exist_ok=True)
     Path(settings.LOG_DIR).mkdir(parents=True, exist_ok=True)

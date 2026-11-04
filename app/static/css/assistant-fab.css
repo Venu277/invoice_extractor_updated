@@ -1,0 +1,44 @@
+.assistant-fab {
+  position: fixed;
+  right: max(22px, env(safe-area-inset-right));
+  bottom: max(22px, env(safe-area-inset-bottom));
+  z-index: 1000;
+  display: grid;
+  width: 72px;
+  height: 72px;
+  place-items: center;
+  overflow: hidden;
+  border: 3px solid var(--sky-600);
+  border-radius: 50%;
+  background: var(--bg-surface);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, .24);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.assistant-fab:hover, .assistant-fab:focus-visible {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, .3);
+}
+.assistant-fab:focus-visible { outline: 3px solid var(--sky-400); outline-offset: 4px; }
+.assistant-fab img { display: block; width: 60px; height: 68px; object-fit: cover; object-position: center 23%; }
+.assistant-fab-label {
+  position: absolute;
+  right: 82px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--bg-surface);
+  color: var(--text-1);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, .12);
+  font: 600 13px/1.2 system-ui, sans-serif;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(5px);
+  transition: opacity .18s ease, transform .18s ease;
+}
+.assistant-fab:hover .assistant-fab-label, .assistant-fab:focus-visible .assistant-fab-label { opacity: 1; transform: translateX(0); }
+@media (max-width: 600px) {
+  .assistant-fab { right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); width: 64px; height: 64px; }
+  .assistant-fab img { width: 54px; height: 61px; }
+}
+@media (prefers-reduced-motion: reduce) { .assistant-fab, .assistant-fab-label { transition: none; } }

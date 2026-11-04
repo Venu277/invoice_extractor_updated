@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Axion guide character</title>
+  <circle cx="40" cy="40" r="37" fill="#E0F2FE"/>
+  <path d="M35 12c-5-5-1-11 4-9 4 2 3 6 1 9" stroke="#075985" stroke-width="3" stroke-linecap="round"/>
+  <path d="M29 13c3-6 12-7 17-2 7-2 13 3 13 9 6 3 8 10 5 16 4 6 2 13-3 17-1 12-10 19-22 19S18 65 17 53c-5-4-6-11-2-16-3-7 0-14 6-17 1-5 4-8 8-7Z" fill="#fff" stroke="#075985" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M24 34c3-4 8-5 12-3m8-1c4-2 9-1 12 3" stroke="#075985" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="31" cy="40" r="2.7" fill="#075985"/>
+  <circle cx="52" cy="40" r="2.7" fill="#075985"/>
+  <path d="M35 49c3 4 8 5 12 0" stroke="#075985" stroke-width="2.5" stroke-linecap="round"/>
+  <ellipse cx="23" cy="46" rx="4" ry="2.5" fill="#F9A8A8" opacity=".8"/>
+  <ellipse cx="59" cy="46" rx="4" ry="2.5" fill="#F9A8A8" opacity=".8"/>
+  <path d="M11 33c-4 1-5 5-3 8m61-8c4 1 5 5 3 8" stroke="#38BDF8" stroke-width="3" stroke-linecap="round"/>
+</svg>

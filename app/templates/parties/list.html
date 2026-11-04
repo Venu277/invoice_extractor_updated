@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% block title %}Parties{% endblock %}
+
+{% block head %}
+<style>
+  .parties-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:20px 0 16px; }
+  .party-search-wrap { position:relative; flex:1; max-width:440px; }
+  .party-search-wrap .search-icon { position:absolute; left:13px; top:50%; display:flex; color:var(--text-3); transform:translateY(-50%); }
+  .party-search-wrap input { width:100%; padding-left:40px; }
+  .party-filters { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:16px; }
+  .party-filter { padding:8px 12px; border:1px solid var(--border-subtle); border-radius:var(--r-pill); background:var(--bg-surface); color:var(--text-2); font:inherit; font-size:13px; cursor:pointer; }
+  .party-filter.active { border-color:var(--sky-600); background:var(--sky-50); color:var(--sky-800); font-weight:650; }
+  .party-table-wrap { overflow-x:auto; }
+  .party-table { min-width:950px; }
+  .party-name { color:var(--text-1); font-weight:650; }
+  .party-sub { display:block; margin-top:3px; color:var(--text-3); font-size:12px; }
+  .party-contact { display:grid; gap:3px; font-size:12px; }
+  .party-contact a { color:var(--text-2); text-decoration:none; }
+  .party-contact a:hover { color:var(--sky-700); }
+  .party-actions { display:flex; justify-content:flex-end; gap:6px; white-space:nowrap; }
+  .party-row.archived { opacity:.62; }
+  .party-status-note { min-height:22px; margin:0 0 12px; color:var(--text-2); font-size:13px; }
+  .party-dialog { width:min(760px,calc(100% - 28px)); max-height:90vh; padding:0; overflow:auto; border:1px solid var(--border-subtle); border-radius:var(--r-xl); background:var(--bg-surface); color:var(--text-1); box-shadow:0 24px 80px rgba(0,0,0,.32); }
+  .party-dialog::backdrop { background:rgba(10,18,32,.56); backdrop-filter:blur(3px); }
+  .party-dialog-head { position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between; gap:12px; padding:18px 22px; border-bottom:1px solid var(--border-subtle); background:var(--bg-surface); }
+  .party-dialog-head h2 { margin:0; font-size:20px; }
+  .party-dialog-body { padding:20px 22px; }
+  .party-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px; }
+  .party-form-grid .form-group { min-width:0; }
+  .party-form-grid input,.party-form-grid select,.party-form-grid textarea { width:100%; box-sizing:border-box; }
+  .party-form-grid textarea { min-height:76px; resize:vertical; }
+  .party-form-grid .span-2 { grid-column:1 / -1; }
+  .party-dialog-foot { position:sticky; bottom:0; display:flex; justify-content:flex-end; gap:9px; padding:14px 22px; border-top:1px solid var(--border-subtle); background:var(--bg-surface); }
+  .party-required { color:var(--bad); }
+  @media(max-width:700px) { .parties-toolbar { align-items:stretch; flex-direction:column; } .party-search-wrap { max-width:none; } .parties-toolbar .btn { justify-content:center; } }
+  @media(max-width:560px) { .party-form-grid { grid-template-columns:1fr; } .party-form-grid .span-2 { grid-column:auto; } .party-dialog-head,.party-dialog-body { padding-inline:16px; } .party-dialog-foot { padding-inline:16px; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Parties &amp; Accounts</h1>
+    <p style="font-size:var(--font-size-sm);color:var(--text-3);margin-top:4px;">Manage customer and supplier records used across invoices and account ledgers.</p>
+  </div>
+  <div class="page-actions">
+    {% if can_manage_parties %}<a href="/invoices/new" class="btn btn-ghost">{{ icon('plus', size=15) }}<span>New sales invoice</span></a><button type="button" class="btn btn-primary" onclick="openPartyForm()">{{ icon('plus', size=16) }}<span>Add party</span></button>{% endif %}
+  </div>
+</div>
+
+<div class="parties-toolbar">
+  <label class="party-search-wrap"><span class="search-icon">{{ icon('search', size=16) }}</span><input type="search" id="partySearch" placeholder="Search name, GSTIN, phone, or email" aria-label="Search parties"></label>
+  {% if include_archived %}<a class="btn btn-ghost btn-sm" href="/parties">{{ icon('arrow-left', size=14) }} Active parties</a>{% else %}<a class="btn btn-ghost btn-sm" href="/parties?include_archived=true">View archived</a>{% endif %}
+</div>
+<div class="party-filters" role="tablist" aria-label="Filter parties by type">
+  <button type="button" class="party-filter active" data-filter="all">All parties</button>
+  <button type="button" class="party-filter" data-filter="customer">Customers</button>
+  <button type="button" class="party-filter" data-filter="vendor">Suppliers</button>
+  <button type="button" class="party-filter" data-filter="both">Both</button>
+</div>
+<p class="party-status-note" id="partyStatus" role="status" aria-live="polite"></p>
+
+<div class="table-container party-table-wrap">
+  <table id="partiesTable" class="party-table">
+    <thead><tr><th>Party Name</th><th>Type</th><th>GSTIN</th><th>State</th><th>Contact Details</th><th>Payment Terms</th><th class="text-right">Actions</th></tr></thead>
+    <tbody>
+      {% for p in parties %}
+      <tr class="party-row{% if p.is_archived %} archived{% endif %}" data-type="{{ p.type }}" data-name="{{ p.name|lower }}" data-gstin="{{ (p.gstin or '')|lower }}" data-phone="{{ (p.phone or '')|lower }}" data-email="{{ (p.email or '')|lower }}">
+        <td><span class="party-name">{{ p.name }}</span>{% if p.auto_created %}<span class="party-sub">Imported from invoice · review details</span>{% elif p.is_archived %}<span class="party-sub">Archived</span>{% endif %}</td>
+        <td>{% if p.type == 'vendor' %}<span class="chip chip-purchase">Supplier</span>{% elif p.type == 'customer' %}<span class="chip chip-sales">Customer</span>{% else %}<span class="chip chip-info">Both</span>{% endif %}</td>
+        <td>{% if p.gstin %}<code>{{ p.gstin }}</code>{% else %}<span style="color:var(--text-3);">Unregistered</span>{% endif %}</td>
+        <td>{{ state_codes.get(p.state_code, p.state_code or '—') }}</td>
+        <td><div class="party-contact">{% if p.phone %}<a href="tel:{{ p.phone }}">{{ p.phone }}</a>{% endif %}{% if p.email %}<a href="mailto:{{ p.email }}">{{ p.email }}</a>{% endif %}{% if not p.phone and not p.email %}<span style="color:var(--text-3);">—</span>{% endif %}</div></td>
+        <td>{{ p.payment_terms_days if p.payment_terms_days is not none else '—' }}{% if p.payment_terms_days is not none %} days{% endif %}</td>
+        <td><div class="party-actions">
+          <a href="/parties/{{ p.id }}/ledger" class="btn btn-ghost btn-sm">Ledger</a>
+          {% if can_manage_parties %}
+          <button type="button" class="btn btn-ghost btn-sm" data-party='{{ {'id':p.id,'name':p.name,'type':p.type,'gstin':p.gstin,'gst_registration_type':p.gst_registration_type,'state_code':p.state_code,'address':p.address,'shipping_address':p.shipping_address,'phone':p.phone,'email':p.email,'payment_terms_days':p.payment_terms_days,'credit_limit_paise':p.credit_limit_paise,'notes':p.notes,'is_archived':p.is_archived}|tojson|forceescape }}' onclick="editParty(this)">View / edit</button>
+          {% if p.is_archived %}<button type="button" class="btn btn-ghost btn-sm" onclick="setArchived({{ p.id }}, false)">Restore</button>{% else %}<button type="button" class="btn btn-ghost btn-sm" onclick="setArchived({{ p.id }}, true)">Archive</button>{% endif %}
+          {% endif %}
+        </div></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7"><div class="empty-state"><div class="empty-state-icon">{{ icon('parties', size=24) }}</div><h3>{% if include_archived %}No Archived Parties{% else %}No Parties Yet{% endif %}</h3><p>{% if include_archived %}Archived accounts will appear here.{% else %}Add a customer or supplier, or upload an invoice to detect parties automatically.{% endif %}</p>{% if can_manage_parties and not include_archived %}<button type="button" class="btn btn-primary" onclick="openPartyForm()">{{ icon('plus', size=15) }} Add your first party</button>{% endif %}</div></td></tr>
+      {% endfor %}
+      <tr id="noSearchResults" hidden><td colspan="7"><div class="empty-state"><h3>No matching parties</h3><p>Try a different search or filter.</p></div></td></tr>
+    </tbody>
+  </table>
+</div>
+
+{% if can_manage_parties %}
+<dialog class="party-dialog" id="partyDialog" aria-labelledby="partyDialogTitle">
+  <form id="partyForm">
+    <div class="party-dialog-head"><h2 id="partyDialogTitle">Add party</h2><button type="button" class="btn btn-ghost btn-sm" onclick="closePartyForm()" aria-label="Close">{{ icon('close', size=18) }}</button></div>
+    <div class="party-dialog-body">
+      <p id="partyFormError" role="alert" style="display:none;color:var(--bad);margin:0 0 14px;"></p>
+      <div class="party-form-grid">
+        <div class="form-group"><label for="partyName">Party name <span class="party-required">*</span></label><input id="partyName" name="name" maxlength="255" required></div>
+        <div class="form-group"><label for="partyType">Party type <span class="party-required">*</span></label><select id="partyType" name="type" required><option value="customer">Customer</option><option value="vendor">Supplier</option><option value="both">Both</option></select></div>
+        <div class="form-group"><label for="partyGstType">GST registration type</label><select id="partyGstType" name="gst_registration_type"><option value="unregistered">Unregistered</option><option value="regular">Registered · Regular</option><option value="composition">Registered · Composition</option><option value="sez">SEZ</option><option value="consumer">Consumer</option></select></div>
+        <div class="form-group"><label for="partyGstin">GSTIN <span id="gstinRequiredMark" class="party-required" hidden>*</span></label><input id="partyGstin" name="gstin" maxlength="15" autocomplete="off" placeholder="15-character GSTIN"></div>
+        <div class="form-group"><label for="partyState">State</label><select id="partyState" name="state_code"><option value="">Select state</option>{% for code, name in state_codes|dictsort %}<option value="{{ code }}">{{ name }}</option>{% endfor %}</select></div>
+        <div class="form-group"><label for="partyPhone">Phone number</label><input id="partyPhone" name="phone" maxlength="50" autocomplete="tel"></div>
+        <div class="form-group"><label for="partyEmail">Email</label><input id="partyEmail" name="email" type="email" maxlength="255" autocomplete="email"></div>
+        <div class="form-group"><label for="partyTerms">Payment terms (days)</label><input id="partyTerms" name="payment_terms_days" type="number" min="0" max="365" value="30"></div>
+        <div class="form-group"><label for="partyCreditLimit">Credit limit (₹)</label><input id="partyCreditLimit" name="credit_limit" type="number" min="0" step="0.01" placeholder="Optional"></div>
+        <div class="form-group span-2"><label for="partyAddress">Billing address</label><textarea id="partyAddress" name="address" maxlength="500"></textarea></div>
+        <div class="form-group span-2"><label for="partyShippingAddress">Shipping address <span style="color:var(--text-3);font-weight:400;">Optional</span></label><textarea id="partyShippingAddress" name="shipping_address" maxlength="500"></textarea></div>
+        <div class="form-group span-2"><label for="partyNotes">Notes <span style="color:var(--text-3);font-weight:400;">Optional</span></label><textarea id="partyNotes" name="notes" maxlength="4000"></textarea></div>
+      </div>
+    </div>
+    <div class="party-dialog-foot"><button type="button" class="btn btn-ghost" onclick="closePartyForm()">Cancel</button><button id="partySave" type="submit" class="btn btn-primary">Save party</button></div>
+  </form>
+</dialog>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+(() => {
+  const search = document.getElementById('partySearch');
+  const rows = [...document.querySelectorAll('.party-row')];
+  const empty = document.getElementById('noSearchResults');
+  const status = document.getElementById('partyStatus');
+  let selectedType = 'all';
+  function filterRows() {
+    const q = search.value.trim().toLocaleLowerCase();
+    let shown = 0;
+    rows.forEach(row => {
+      const searchable = ['name','gstin','phone','email'].some(key => (row.dataset[key] || '').includes(q));
+      const typeMatch = selectedType === 'all' || row.dataset.type === selectedType || (selectedType === 'customer' && row.dataset.type === 'both') || (selectedType === 'vendor' && row.dataset.type === 'both');
+      row.hidden = !(searchable && typeMatch);
+      if (!row.hidden) shown++;
+    });
+    if (empty) empty.hidden = shown > 0 || rows.length === 0;
+    status.textContent = rows.length ? `${shown} ${shown === 1 ? 'party' : 'parties'} shown` : '';
+  }
+  search.addEventListener('input', filterRows);
+  document.querySelectorAll('.party-filter').forEach(button => button.addEventListener('click', () => {
+    document.querySelectorAll('.party-filter').forEach(item => item.classList.toggle('active', item === button));
+    selectedType = button.dataset.filter;
+    filterRows();
+  }));
+
+  const dialog = document.getElementById('partyDialog');
+  if (!dialog) return;
+  const form = document.getElementById('partyForm');
+  const error = document.getElementById('partyFormError');
+  const gstType = document.getElementById('partyGstType');
+  const gstin = document.getElementById('partyGstin');
+  let editingId = null;
+  function syncGstinRequired() {
+    const required = !['unregistered','consumer'].includes(gstType.value);
+    gstin.required = required;
+    document.getElementById('gstinRequiredMark').hidden = !required;
+  }
+  gstType.addEventListener('change', syncGstinRequired);
+  window.openPartyForm = () => {
+    editingId = null; form.reset();
+    document.getElementById('partyDialogTitle').textContent = 'Add party';
+    document.getElementById('partySave').textContent = 'Save party';
+    document.getElementById('partyTerms').value = '30';
+    error.style.display = 'none'; syncGstinRequired(); dialog.showModal();
+    document.getElementById('partyName').focus();
+  };
+  window.editParty = button => {
+    const party = JSON.parse(button.dataset.party); editingId = party.id; form.reset();
+    const fields = {name:'partyName',type:'partyType',gst_registration_type:'partyGstType',gstin:'partyGstin',state_code:'partyState',phone:'partyPhone',email:'partyEmail',payment_terms_days:'partyTerms',address:'partyAddress',shipping_address:'partyShippingAddress',notes:'partyNotes'};
+    Object.entries(fields).forEach(([key,id]) => { document.getElementById(id).value = party[key] ?? ''; });
+    document.getElementById('partyCreditLimit').value = party.credit_limit_paise ? (party.credit_limit_paise / 100).toFixed(2) : '';
+    document.getElementById('partyDialogTitle').textContent = party.is_archived ? 'View archived party' : 'View / edit party';
+    document.getElementById('partySave').textContent = 'Save changes';
+    error.style.display = 'none'; syncGstinRequired(); dialog.showModal();
+  };
+  window.closePartyForm = () => dialog.close();
+  form.addEventListener('submit', async event => {
+    event.preventDefault(); error.style.display = 'none';
+    const values = new FormData(form);
+    const amount = values.get('credit_limit');
+    const payload = {
+      name: values.get('name').trim(), type: values.get('type'), gst_registration_type: values.get('gst_registration_type'),
+      gstin: values.get('gstin').trim().toUpperCase() || null, state_code: values.get('state_code') || null,
+      address: values.get('address').trim() || null, shipping_address: values.get('shipping_address').trim() || null,
+      phone: values.get('phone').trim() || null, email: values.get('email').trim() || null,
+      payment_terms_days: values.get('payment_terms_days') === '' ? null : Number(values.get('payment_terms_days')),
+      credit_limit_paise: amount === '' ? 0 : Math.round(Number(amount) * 100), notes: values.get('notes').trim() || null
+    };
+    const save = document.getElementById('partySave'); save.disabled = true; save.textContent = 'Saving…';
+    try {
+      const response = await fetch(editingId ? `/api/v1/parties/${editingId}` : '/api/v1/parties', {
+        method: editingId ? 'PUT' : 'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.detail || result.error?.message || 'Could not save this party.');
+      location.reload();
+    } catch (err) { error.textContent = err.message; error.style.display = 'block'; }
+    finally { save.disabled = false; save.textContent = editingId ? 'Save changes' : 'Save party'; }
+  });
+  window.setArchived = async (id, archived) => {
+    const action = archived ? 'archive' : 'restore';
+    if (archived && !confirm('Archive this party? Existing invoices and ledger history will be kept.')) return;
+    try {
+      const response = await fetch(`/api/v1/parties/${id}/${action}`, {method:'POST'});
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.detail || result.error?.message || `Could not ${action} this party.`);
+      location.reload();
+    } catch (err) { alert(err.message); }
+  };
+  syncGstinRequired();
+})();
+</script>
+{% endblock %}

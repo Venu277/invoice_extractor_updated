@@ -1,0 +1,147 @@
+{% from "macros/icons.html" import icon %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Axion | {% block title %}Workspace{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
+  <link rel="manifest" href="/static/site.webmanifest">
+  <link rel="stylesheet" href="/static/css/tokens.css?v=3.4">
+  <link rel="stylesheet" href="/static/css/motion.css?v=3.4">
+  <link rel="stylesheet" href="/static/css/base.css?v=3.4">
+  <link rel="stylesheet" href="/static/css/components.css?v=3.5">
+  <script>
+    (function() {
+      try {
+        var theme = localStorage.getItem('axion_theme') || 'light';
+        document.documentElement.dataset.theme = theme === 'dark' ? 'dark' : 'light';
+      } catch (e) { document.documentElement.dataset.theme = 'light'; }
+    })();
+  </script>
+  <script src="/static/js/motion.js?v=3.5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Prevent layout shift on first paint if user preferred collapsed rail -->
+  <script>
+    (function() {
+      try {
+        if (localStorage.getItem('axion_sidebar') === 'collapsed' && window.innerWidth >= 900) {
+          document.documentElement.classList.add('sidebar-init-collapsed');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+    .sidebar-init-collapsed #appSidebar { width: var(--sidebar-w-collapsed); }
+    .sidebar-init-collapsed #appSidebar .brand-text,
+    .sidebar-init-collapsed #appSidebar .nav-group-title,
+    .sidebar-init-collapsed #appSidebar .nav-label,
+    .sidebar-init-collapsed #appSidebar .user-meta,
+    .sidebar-init-collapsed #appSidebar .logout-label { display: none; }
+    .sidebar-init-collapsed #appSidebar .sidebar-header { justify-content: center; }
+    .sidebar-init-collapsed #appSidebar .brand-block { display: none; }
+  </style>
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <!-- Mobile Scrim Backdrop (< 900px) -->
+  <div id="sidebarScrim" class="sidebar-scrim"></div>
+
+  <div class="app-container">
+    <!-- Collapsible Liquid Glass Sidebar with Red/Maroon Glow -->
+    <aside id="appSidebar" class="sidebar" aria-label="Application Navigation">
+      <!-- Brand & Single Collapse Toggle Button -->
+      <div class="sidebar-header">
+        <a href="/dashboard" class="brand-block">
+          <div class="brand-mark" style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; padding: 0; background: transparent; box-shadow: none;">
+            <img src="/static/img/axion-mark.svg" alt="Axion Mark" width="30" height="30" style="display: block; border-radius: var(--r-sm);">
+          </div>
+          <div class="brand-text">
+            <span class="brand-title">Axion</span>
+            <span class="brand-subtitle">{{ user.business.name if user and user.business else "Workspace" }}</span>
+          </div>
+        </a>
+
+        <!-- The one and only sidebar collapse toggle on desktop -->
+        <button id="sidebarToggle" class="sidebar-toggle-btn" aria-label="Toggle navigation sidebar" aria-expanded="true">
+          {{ icon('panel-toggle', size=18) }}
+        </button>
+      </div>
+
+      <nav class="sidebar-nav" aria-label="Main navigation">
+        <a href="/dashboard" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}" data-tooltip="Home">
+          <span class="nav-icon">{{ icon('dashboard') }}</span><span class="nav-label">Home</span>
+        </a>
+        <a href="/invoices" class="nav-item {% if active_page in ['invoices', 'upload', 'generator'] %}active{% endif %}" data-tooltip="Invoices">
+          <span class="nav-icon">{{ icon('invoices') }}</span><span class="nav-label">Invoices</span>
+        </a>
+        <a href="/parties" class="nav-item {% if active_page == 'parties' %}active{% endif %}" data-tooltip="People">
+          <span class="nav-icon">{{ icon('parties') }}</span><span class="nav-label">People</span>
+        </a>
+        {% if user and user.role in ['owner', 'accountant'] %}
+        <a href="/reports" class="nav-item {% if active_page == 'reports' %}active{% endif %}" data-tooltip="Reports">
+          <span class="nav-icon">{{ icon('reports') }}</span><span class="nav-label">Reports</span>
+        </a>
+        <a href="/exports" class="nav-item {% if active_page == 'exports' %}active{% endif %}" data-tooltip="Exports">
+          <span class="nav-icon">{{ icon('exports') }}</span><span class="nav-label">Exports</span>
+        </a>
+        {% endif %}
+        {% if user and user.role == 'owner' %}
+        <a href="/settings" class="nav-item {% if active_page == 'settings' %}active{% endif %}" data-tooltip="Settings">
+          <span class="nav-icon">{{ icon('settings') }}</span><span class="nav-label">Settings</span>
+        </a>
+        {% endif %}
+      </nav>
+
+      <!-- Sidebar Footer / Pinned User & Logout -->
+      <div class="sidebar-footer">
+        <button id="themeToggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Switch to dark mode">
+          <span class="theme-toggle-icon" aria-hidden="true">☾</span>
+          <span class="theme-toggle-label">Dark mode</span>
+        </button>
+        <div class="user-profile">
+          <div class="user-avatar">
+            {{ icon('user', size=16) }}
+          </div>
+          <div class="user-meta">
+            <span class="user-name">{{ user.name if user else "User" }}</span>
+            <span class="user-role">{{ user.role if user else "Member" }}</span>
+          </div>
+        </div>
+
+        <form action="/auth/logout" method="POST" class="logout-form">
+          <button type="submit" class="logout-btn">
+            {{ icon('logout', size=16) }}
+            <span class="logout-label">Sign out</span>
+          </button>
+        </form>
+      </div>
+    </aside>
+
+    <!-- Main Viewport -->
+    <div class="main-viewport">
+      <!-- Mobile-Only Topbar (< 900px) -->
+      <header class="mobile-topbar">
+        <button id="mobileMenuBtn" class="btn btn-ghost btn-sm btn-icon-only" aria-label="Open navigation menu">
+          {{ icon('panel-toggle', size=20) }}
+        </button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <img src="/static/favicon.svg" alt="Axion Logo" width="22" height="22">
+          <span style="font-weight: 600; font-size: 16px; color: var(--text-1);">Axion</span>
+        </div>
+        <div style="width: 32px;"></div>
+      </header>
+
+      <main class="main-content page-enter">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js?v=3.4"></script>
+  {% block scripts %}{% endblock %}
+  {% include "assistant_fab.html" %}
+</body>
+</html>

@@ -58,7 +58,6 @@ Generate monthly report PDF
 ## Tech stack
 
 - Python 3.11+
-- Streamlit for the user interface
 - `pdfplumber` and `PyPDF2` for PDF text extraction
 - `pytesseract` and `pdf2image` for scanned-document OCR
 - SQLite for local storage
@@ -203,3 +202,7 @@ Contributions are welcome. If you want to improve the extraction logic, validati
 ## Project goal
 
 The project aims to reduce manual data entry for invoice processing by turning PDF invoices into clean, reviewable accounting data that can be stored, validated, and summarized quickly.
+
+## License
+
+Licensed under MIT license

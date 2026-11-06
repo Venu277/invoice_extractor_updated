@@ -1,42 +1,165 @@
-﻿# Invoice Extractor
+<div align="center">
 
-A lightweight Python application for extracting structured data from PDF invoices, validating key GST-related checks, storing records in a local database, and generating a monthly business summary report.
+# Axion Extract
 
-This repository is a practical, local-first invoice-processing workflow for small businesses that need to turn uploaded supplier PDFs into organized accounting data without manually retyping every field.
+**Invoice work, ready for review.**
 
-## What the app does
+Turn invoices and business documents into organized, validated, GST-aware data, built for Indian CAs and finance teams.
 
-- Upload one or more invoice PDFs from a user dashboard.
-- Read text directly from normal PDFs.
-- Fall back to OCR for scanned/poor-quality documents when Tesseract and Poppler are available.
-- Extract core invoice fields such as:
-  - vendor name
-  - invoice number
-  - invoice date
-  - GSTIN
-  - subtotal
-  - CGST / SGST / IGST
-  - total amount
-- Validate extracted values and flag issues such as missing required fields, GSTIN format problems, mismatched taxes, and subtotal + GST != total.
-- Save records per user in SQLite and avoid duplicate invoice entries based on vendor + invoice number.
-- Show a dashboard with invoice totals, monthly trends, and invoice statuses.
-- Generate a PDF monthly summary report for the selected period.
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-axioninvoiceextractor.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://axioninvoiceextractor.vercel.app/)
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000000?logo=vercel&logoColor=white)](https://vercel.com/)
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+[**Open the live app**](https://axioninvoiceextractor.vercel.app/) · [Sign up free](https://axioninvoiceextractor.vercel.app/login?tab=signup) · [API docs](https://axioninvoiceextractor.vercel.app/docs) · [Talk to the team](https://axioninvoiceextractor.vercel.app/talk-to-team)
+
+</div>
+
+---
+
+## Live Demo
+
+Axion Extract is deployed on **Vercel** and available at:
+
+**https://axioninvoiceextractor.vercel.app/**
+
+You can create a free account (Starter plan, 25 pages per month) and start processing invoices right away. No local setup is needed.
+
+---
+
+## Overview
+
+Axion Extract replaces manual invoice punching with a review-first workflow. Upload supplier or sales invoices, let the app read and validate them, correct only what is flagged, and export clean data to your books.
+
+The project began as a local-first Streamlit tool and now ships as a hosted product with accounts, workspaces, exports, templates, and plans. The extraction and validation engine is still simple, modular, and runnable on your own machine.
+
+---
+
+## Features
+
+### The core workflow
+
+| Step | What happens |
+|------|--------------|
+| **1. Upload** | Drag and drop one or more invoice PDFs into your workspace. |
+| **2. Extract** | Axion reads supplier, dates, tax details, and line items automatically. |
+| **3. Validate** | GSTIN and tax math are checked for issues. |
+| **4. Review** | You fix only what is flagged. You stay in control. |
+| **5. Export** | Send clean, reviewed data to your books. |
+
+### Integrity and accuracy checks
+
+- **Field-level extraction**: invoice numbers, dates, parties, tax identifiers, totals, and line items.
+- **Tax arithmetic checks**: compares line values, tax components (CGST / SGST / IGST), and invoice totals to catch inconsistencies such as `subtotal + GST != total`.
+- **GSTIN validation**: validates GSTIN structure and checksum, and surfaces state and tax-split details.
+- **Exception flags**: missing or unusual values are brought forward for focused human review.
+- **Party consistency**: keeps supplier and customer details organized across invoice records.
+- **Duplicate protection**: avoids duplicate entries using a normalized vendor + invoice number pair.
+- **OCR fallback**: scanned or poor-quality PDFs are processed with Tesseract and Poppler when available.
+
+### Exports
+
+Reviewed invoices can be exported in formats that fit common accounting workflows:
+
+| Format | Use |
+|--------|-----|
+| **CSV register** (`.csv`) | Invoice registers for spreadsheets and further analysis |
+| **Excel workbook** (`.xlsx`) | Formatted reports and reconciliation |
+| **Tally Prime XML** (`.xml`) | Import straight into Tally Prime |
+
+Exports are available to authorized workspace roles.
+
+### Dashboard and reporting
+
+- Invoice totals, monthly trends, and validation statuses at a glance.
+- Monthly PDF summary report with totals, GST breakdown, top vendors, and pass/fail validation counts.
+
+### Document categories
+
+| Document type | Status |
+|---------------|--------|
+| Purchase invoices | Live |
+| Sales invoices | Live |
+| Expense documents | In testing |
+| Credit and debit notes | In testing |
+| Bank statements | Coming soon |
+| Custom documents | Coming soon |
+
+### Custom invoice templates
+
+Build a template that matches your workflow:
+
+1. **Choose fields**: pick the data points your documents need.
+2. **Set rules**: add formats, required values, and checks (for example, GSTIN checksum, required invoice date).
+3. **Review results**: run it, then refine with human review.
+
+An example *Purchase invoice template* includes Invoice number (Text, required), Invoice date (Date, required), Supplier GSTIN (GSTIN, checksum), Taxable value (Currency, required), and Line items (Table: HSN, qty, rate). The number of templates depends on your plan.
+
+### API and integrations
+
+- **Axion API**: available by workspace access. [Request access](mailto:axion@xmail.com?subject=Request%20Axion%20API%20access).
+- **Interactive API docs**: [Swagger UI](https://axioninvoiceextractor.vercel.app/docs).
+- **MCP connections**: planned. Not available yet. [Share your integration needs](mailto:axion@xmail.com?subject=Axion%20MCP%20interest).
+
+### Security and data protection
+
+- **Private workspaces**: business data is scoped to the appropriate workspace.
+- **Access controls**: account access is protected by authenticated sign-in.
+- **Clear review trail**: extracted data stays visible for checks before you use it.
+- **Protected transport**: HTTPS when accessing Axion online.
+
+### Other highlights
+
+- Light and dark mode.
+- **Ask Axion AI**: in-app assistant for quick questions.
+- Newsletter and product updates via email.
+- Business Suite waitlist for upcoming invoice, collections, and reporting tools.
+
+---
+
+## Pricing
+
+| Plan | Price | Page allowance | Best for |
+|------|-------|----------------|----------|
+| **Starter** | ₹0 / month | Up to 25 pages | Individuals getting started |
+| **Professional** | ₹499 / month | Up to 500 pages | Independent CAs and small teams |
+| **Business** | ₹1,499 / month | Up to 2,000 pages | Growing finance teams |
+| **Enterprise** | Custom | Higher volume | [Contact us](mailto:axion@xmail.com?subject=Axion%20Enterprise%20plan) |
+
+Page limits apply per month. All plans include invoice extraction and review, with reports and exports (plan-dependent).
+
+---
+
+## Frequently Asked Questions
+
+**Does Axion file GST returns automatically?**
+No. Axion helps extract, validate, organize, and report invoice data. Review the results and use the relevant filing process for your business.
+
+**Can I correct extracted data?**
+Yes. The review step lets you check and correct values before using a record.
+
+**What documents can I process?**
+Purchase and sales invoices are live. Credit and debit notes are in testing, and bank statements are coming soon.
+
+---
 
 ## Architecture
 
-The project is intentionally simple and modular:
+The project is intentionally modular:
 
-- `app.py` - Streamlit application entry point and dashboard UI
-- `extractor.py` - PDF reading, field extraction, and validation logic
-- `processing.py` - orchestration for each uploaded invoice
-- `database.py` - user authentication, invoice storage, and SQLite access
-- `report.py` - PDF summary generation for monthly reporting
-- `tests/` - automated verification for invoice processes and validation behavior
-- `data/` - local database storage (`data/invoices.db`)
+| File | Responsibility |
+|------|----------------|
+| `app.py` | Application entry point and dashboard UI |
+| `extractor.py` | PDF reading, field extraction, and validation logic |
+| `processing.py` | Orchestration for each uploaded invoice |
+| `database.py` | User authentication, invoice storage, and database access |
+| `report.py` | PDF summary generation for monthly reporting |
+| `tests/` | Automated tests for processing and validation behavior |
+| `data/` | Local database storage (`data/invoices.db`) |
 
-## How it works
+### Processing pipeline
 
-```text
+```
 Upload invoice PDF
        |
        v
@@ -49,36 +172,37 @@ Parse key invoice fields
 Validate GST-related checks
        |
        v
-Save to SQLite and show in dashboard
+Save to database and show in dashboard
        |
        v
-Generate monthly report PDF
+Export (CSV / Excel / Tally XML) or generate monthly report PDF
 ```
 
-## Tech stack
+### Tech stack
 
-- Python 3.11+
-- `pdfplumber` and `PyPDF2` for PDF text extraction
-- `pytesseract` and `pdf2image` for scanned-document OCR
-- SQLite for local storage
-- pandas for invoice data handling
-- ReportLab for PDF report generation
-- pytest for tests
+- **Python 3.11+**
+- **pdfplumber** and **PyPDF2** for PDF text extraction
+- **pytesseract** and **pdf2image** for scanned-document OCR
+- **SQLite** for local storage
+- **pandas** for invoice data handling
+- **ReportLab** for PDF report generation
+- **pytest** for tests
+- **Vercel** for deployment and hosting
 
-## Repository structure
+### Repository structure
 
-```text
+```
 invoice_extractor-main/
-├── app.py                 # Streamlit app
+├── app.py                 # Application entry point
 ├── extractor.py           # Extraction and validation logic
 ├── processing.py          # File processing pipeline
-├── database.py            # SQLite database layer
+├── database.py            # Database layer
 ├── report.py              # PDF summary report builder
 ├── requirements.txt       # Python dependencies
 ├── tests/                 # Unit/integration tests
-├── data/                  # SQLite database and generated app data
+├── data/                  # Database and generated app data
 ├── invoices/              # Example input directory
-├── output/                # Exported outputs (if used)
+├── output/                # Exported outputs
 ├── uploads/               # Uploaded files
 ├── README.md              # Project documentation
 ├── README_FRONTEND.md     # Front-end style notes
@@ -87,7 +211,25 @@ invoice_extractor-main/
 └── docs/                  # Supporting docs
 ```
 
-## Quick start
+---
+
+## Deployment
+
+The production app is deployed on **[Vercel](https://vercel.com/)** at
+[axioninvoiceextractor.vercel.app](https://axioninvoiceextractor.vercel.app/).
+
+To deploy your own copy:
+
+1. Fork or clone this repository.
+2. Import the project into Vercel from your Git provider.
+3. Add the environment variables from `.env.example` in **Project Settings → Environment Variables**.
+4. Deploy. Every push to your main branch triggers a new production deployment automatically.
+
+> **Note:** Vercel's filesystem is ephemeral. For production use, point the app at a hosted database instead of a local SQLite file, and use external storage for uploaded files.
+
+---
+
+## Run Locally
 
 ### 1) Clone the repository
 
@@ -102,13 +244,13 @@ cd invoice_extractor_updated
 python -m venv .venv
 ```
 
-On Windows:
+Windows:
 
-```powershell
+```bash
 .venv\Scripts\activate
 ```
 
-On macOS/Linux:
+macOS / Linux:
 
 ```bash
 source .venv/bin/activate
@@ -126,83 +268,99 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Then open the local URL shown in the terminal, usually:
+Then open the local URL shown in the terminal, usually `http://localhost:8501`.
 
-```text
-http://localhost:8501
-```
+### OCR support
 
-## OCR support
+Standard PDFs work without OCR. For scanned invoices, install these and make sure they are on your `PATH`:
 
-The app can extract text from standard PDF files without OCR. For scanned invoices, OCR is enabled if these tools are installed and available on PATH:
+- [Tesseract OCR](https://github.com/tesseract-ocr/tesseract)
+- [Poppler](https://poppler.freedesktop.org/)
 
-- Tesseract OCR
-- Poppler
+Without Tesseract, scanned PDFs may not be processed and the app will usually report that no extractable text was found.
 
-If Tesseract is missing, scanned PDFs may not be processed correctly and the app will usually report that no extractable text was found.
+---
 
-## Data model
+## Data Model
 
-Each user has a separate account and can store invoices in SQLite. The invoice table stores fields such as:
+Each user has a separate account and stores invoices in an isolated workspace. An invoice record includes:
 
-- file name
-- vendor
-- invoice number
-- date
+- File name
+- Vendor
+- Invoice number
+- Date
 - GSTIN
-- subtotal
-- CGST
-- SGST
-- IGST
+- Subtotal
+- CGST, SGST, IGST
 - GST total
-- final total
-- validation status
+- Final total
+- Validation status
 
-Duplicate detection is based on a normalized pair of vendor and invoice number.
+Duplicate detection uses a normalized pair of vendor and invoice number.
 
-## Validation rules
+---
 
-The extractor performs basic GST-oriented checks before marking an invoice as valid. Examples include:
+## Validation Rules
 
-- required fields must be present
-- GSTIN format must match the expected pattern
-- CGST and SGST should be present together when applicable
-- IGST should not coexist with CGST/SGST on the same invoice unless the document format clearly indicates a mixed case
-- subtotal + GST should roughly match the total amount
+Before marking an invoice as valid, the extractor checks that:
 
-These checks are warnings/validation signals, not legal certification.
+- Required fields are present.
+- GSTIN format matches the expected pattern (and checksum where applicable).
+- CGST and SGST appear together when applicable.
+- IGST does not coexist with CGST/SGST unless the document clearly indicates a mixed case.
+- Subtotal + GST roughly matches the total amount.
 
-## Monthly reporting
+These checks are validation signals, not legal certification.
 
-The application can build a PDF report for a selected month using the approved invoice data. The report includes:
+---
 
-- summary totals
-- GST breakdown
-- top vendors
-- pass/fail validation counts
-- monthly business summary tables
-
-## Running tests
+## Running Tests
 
 ```bash
 pytest
 ```
 
-## Notes and limitations
+---
 
-- This project is designed to be a practical local tool, not a government filing system.
-- Extraction relies on regular-expression parsing, so invoice layouts that vary widely from the expected structure may need manual review.
-- GST checks are heuristic and should be treated as data validation rather than legal advice.
-- For production usage, you may want to move from SQLite to a more robust database and add stronger authentication and deployment controls.
+## Notes and Limitations
+
+- Axion is a data extraction and validation tool, **not** a government filing system.
+- Extraction relies on pattern parsing, so unusual invoice layouts may need manual review. This is why the review step exists.
+- GST checks are heuristic and should be treated as data validation, not legal or tax advice.
+- Features marked *In testing*, *Coming soon*, or *Planned* (credit/debit notes, bank statements, custom documents, MCP) are not yet generally available.
+
+---
+
+## Roadmap
+
+- Credit and debit note workflows
+- Bank statement ingestion
+- Custom document extraction
+- MCP-compatible integrations
+- Axion Business Suite: invoices, collections, reporting, and everyday finance operations ([join the waitlist](mailto:axion@xmail.com?subject=Axion%20Business%20Suite%20waitlist))
+
+---
 
 ## Contributing
 
-Contributions are welcome. If you want to improve the extraction logic, validation rules, dashboard UX, or reporting, please open an issue or submit a pull request with a clear description of the change.
+Contributions are welcome. To improve extraction logic, validation rules, dashboard UX, or reporting, please open an issue or submit a pull request with a clear description of the change.
 
-## Project goal
+---
 
-The project aims to reduce manual data entry for invoice processing by turning PDF invoices into clean, reviewable accounting data that can be stored, validated, and summarized quickly.
+## Contact
+
+- Email: [axion@xmail.com](mailto:axion@xmail.com)
+- Web: [axioninvoiceextractor.vercel.app](https://axioninvoiceextractor.vercel.app/)
+- Talk to the team: [axioninvoiceextractor.vercel.app/talk-to-team](https://axioninvoiceextractor.vercel.app/talk-to-team)
+
+---
 
 ## License
 
-Licensed under MIT license
+Licensed under the [MIT License](LICENSE).
+
+<div align="center">
+
+© 2026 Axion Technologies Private Limited
+
+</div>

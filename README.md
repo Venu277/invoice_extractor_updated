@@ -2,7 +2,7 @@
 
 # Axion Extract
 
-**Invoice work, ready for review.**
+**Invoice work, ready for review**
 
 Turn invoices and business documents into organized, validated, GST-aware data, built for Indian CAs and finance teams.
 

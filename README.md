@@ -27,14 +27,6 @@ You can create a free account (Starter plan, 25 pages per month) and start proce
 
 ---
 
-## Overview
-
-Axion Extract replaces manual invoice punching with a review-first workflow. Upload supplier or sales invoices, let the app read and validate them, correct only what is flagged, and export clean data to your books.
-
-The project began as a local-first Streamlit tool and now ships as a hosted product with accounts, workspaces, exports, templates, and plans. The extraction and validation engine is still simple, modular, and runnable on your own machine.
-
----
-
 ## Features
 
 ### The core workflow

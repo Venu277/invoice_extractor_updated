@@ -1,1 +1,9 @@
 target/
+*.iso
+*.vmdk
+*.img
+*.bin.bak
+disk.img
+# Never commit secrets
+*.pem
+*.key

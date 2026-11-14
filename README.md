@@ -1,100 +1,142 @@
 # MicroOS
 
-A minimal x86_64 operating system kernel written in Rust. It boots in QEMU and prints text to the screen through the VGA text buffer.
+A hobby x86_64 operating system kernel written in Rust, built from scratch as a
+learning project. It currently boots in QEMU and is being developed step-by-step
+toward a VMware-bootable OS with networking, storage, and a package manager.
 
-> **Status:** Early-stage learning project. Current functionality is limited to booting and printing text.
+> **Honest Scope:** See the [Honest Scope](#honest-scope) section below.
 
-## Features
+---
 
-- Written in `no_std` Rust with no operating system underneath it
-- Custom x86_64 target specification (`x86_64-micro_os.json`)
-- Boots through the `bootloader` crate (v0.9.35) and runs under QEMU
-- Text output via the VGA text buffer
+## Current Status
+
+| Step | Name | Status |
+|------|------|--------|
+| Step 0 | Baseline, hygiene, TSC boot timer | ✅ Done |
+| Step 1 | GDT/TSS, PIC, timer/keyboard IRQs | 🔲 Next |
+| Step 2 | Paging, frame allocator, heap, alloc | 🔲 Planned |
+| Step 3 | Async executor, shell, system clock | 🔲 Planned |
+| Step 4 | Storage, file system | 🔲 Planned |
+| Step 5 | ISO packaging, VMware boot | 🔲 Planned |
+| Step 6 | LAN networking (e1000, smoltcp) | 🔲 Planned |
+| Step 7 | WiFi layer | 🔲 Planned |
+| Step 8 | Laptop hardware compatibility | 🔲 Planned |
+| Step 9 | Package manager `apt` / `aptitude` | 🔲 Planned |
+| Step 10 | Package store `snap` | 🔲 Planned |
+| Step 11 | Final integration and presentation | 🔲 Planned |
+
+See [PROGRESS.md](PROGRESS.md) for the current detailed status.
+
+---
+
+## Honest Scope
+
+This project builds **MicroOS-native** tools that share command names and formats
+with Linux, but are **not** Linux-compatible:
+
+- **`apt` / `aptitude`**: Parses real Debian `Packages` index files and `.deb`
+  archive format (ar + control.tar + data.tar), implements dependency resolution
+  and a dpkg-style status database — but packages must be built for MicroOS.
+  Prebuilt Debian/Ubuntu `.deb` binaries will **not** run; they require Linux
+  kernel ABI, glibc, and ELF dynamic linking against the Linux dynamic linker.
+
+- **`snap` store**: A snap-style package store with its own manifest format and
+  HTTP index. This is **not** real snapd/squashfs. Real Snap packages require
+  snapd, squashfs-tools, AppArmor, and the Linux kernel.
+
+- **WiFi in VMware**: The host's WiFi NIC is presented as an Ethernet device to
+  the guest. A real chipset driver (e.g. Intel iwlwifi) cannot be exercised in a
+  VM. The WiFi layer is implemented with a clean driver trait so a real driver
+  can be added when running on bare metal.
+
+- **No Linux ABI**: MicroOS has its own syscall interface. Linux ELF binaries will
+  not run.
+
+---
 
 ## Project Structure
 
 ```
-micro_os/
-├── .cargo/              # Cargo build configuration for the custom target
-├── src/                 # Kernel source code
-├── Cargo.toml           # Package manifest and dependencies
-├── Cargo.lock
-├── rust-toolchain.toml  # Pins the Rust nightly toolchain
-├── x86_64-micro_os.json # Custom target specification
-└── README.md
+micro_os-main/
+├── .cargo/              # Cargo build config (custom target, build-std)
+├── src/
+│   ├── lib.rs           # Library root: test framework, init, hlt_loop
+│   ├── main.rs          # Kernel entry point (_start)
+│   ├── vga_buffer.rs    # VGA text-mode driver and println! macro
+│   ├── serial.rs        # UART serial port driver and serial_println! macro
+│   └── interrupts.rs    # IDT: breakpoint + page fault handlers
+├── docs/                # Per-step documentation
+├── Cargo.toml           # Package manifest
+├── rust-toolchain.toml  # Pins nightly-2025-06-01
+├── x86_64-micro_os.json # Custom target spec (no_std, softfloat, ld.lld)
+├── PROGRESS.md          # Current state, known issues, decisions
+├── BOOT_TIMES.md        # Boot time measurements per step
+└── README.md            # This file
 ```
+
+---
 
 ## Prerequisites
 
-| Tool | Version | Purpose |
-|---|---|---|
-| Rust (via rustup) | `nightly-2025-06-01` | Builds the kernel. Pinned in `rust-toolchain.toml`. |
-| `rust-src` component | Matches toolchain | Needed to build `core` for the custom target |
-| `llvm-tools-preview` component | Matches toolchain | Needed by `bootimage` to assemble the bootable image |
-| `bootimage` | `0.10.3` | Combines the kernel with the bootloader into a bootable disk image |
-| QEMU | Any recent version | Emulates an x86_64 machine to run the OS |
+| Tool | Version / Notes |
+|------|----------------|
+| Rust (rustup) | Toolchain pinned to `nightly-2025-06-01` via `rust-toolchain.toml` |
+| `rust-src` component | Required to build `core` for the custom target |
+| `llvm-tools-preview` | Required by `bootimage` to objcopy the kernel binary |
+| `bootimage` | 0.10.3 — install with `cargo install bootimage --version 0.10.3` |
+| QEMU | Any recent x86_64 build — on Windows add to PATH: `C:\Program Files\qemu` |
 
-## Setup
-
-**Step 1: Install Rust with rustup**
-
-If you don't have rustup, install it from [rustup.rs](https://rustup.rs). The pinned nightly toolchain is installed automatically the first time you build inside this project because of `rust-toolchain.toml`.
-
-**Step 2: Add the required Rust components**
-
-From inside the project folder:
-
-```bash
-rustup component add rust-src llvm-tools-preview
-```
-
-**Step 3: Install bootimage**
-
-```bash
-cargo install bootimage --version 0.10.3
-```
-
-**Step 4: Install QEMU**
-
-- **Ubuntu/Debian:** `sudo apt install qemu-system-x86`
-- **macOS (Homebrew):** `brew install qemu`
-- **Windows:** Download the installer from [qemu.org](https://www.qemu.org/download/#windows) and add its `bin` folder to your `PATH`.
-
-Verify the install with:
-
-```bash
-qemu-system-x86_64 --version
-```
+---
 
 ## Build and Run
 
-From the project root:
+```powershell
+# From the project root on Windows PowerShell:
+$env:PATH += ";C:\Program Files\qemu"
 
-```bash
-cargo run
+cargo build          # Compile the kernel
+cargo test           # Run all tests in QEMU (custom test framework)
+cargo run            # Boot in QEMU (serial output visible in terminal)
 ```
 
-This compiles the kernel, creates the bootable image, and launches it in QEMU. You should see the text printed on the VGA output in the QEMU window.
+---
 
-## Troubleshooting
+## Toolchain Patch Notes
 
-- **Build fails with target or ABI errors:** The `bootloader` 0.9.35 target file needed manual edits: `target-pointer-width` and `target-c-int-width` had to be strings, and `rustc-abi = "x86-softfloat"` had to be added. See the Notes section below.
-- **`cargo run` cannot find `bootimage`:** Make sure you ran Step 3 and that `~/.cargo/bin` is on your `PATH`.
-- **QEMU window does not open:** Confirm `qemu-system-x86_64` is installed and on your `PATH`.
+**bootloader 0.9.35 target file hand-patch** (required; re-apply if Cargo clears
+the registry):
 
-## Notes
+File: `%USERPROFILE%\.cargo\registry\src\...\bootloader-0.9.35\x86_64-bootloader.json`
 
-- The toolchain is pinned in `rust-toolchain.toml`. Do not update it without retesting the build.
-- The `bootloader` crate's `x86_64-bootloader.json` target file required the manual edits described above.
+Changes made:
+1. `"target-pointer-width"` changed from integer `64` to string `"64"`
+2. `"target-c-int-width"` changed from integer `32` to string `"32"`
+3. Added `"rustc-abi": "x86-softfloat"`
 
-## Roadmap
+These match the `x86_64-micro_os.json` custom target. Without this patch the
+bootloader crate fails to compile with an ABI mismatch error.
 
-The long-term goal is to build a complete, working micro operating system that runs on virtually any desktop by the end of Semester 3.
+---
+
+## OneDrive Warning
+
+> **Recommendation:** Move the project folder out of OneDrive to avoid sync
+> slowdowns and incremental-cache `Access Denied` errors:
+>
+> ```powershell
+> Move-Item "C:\Users\Venugopal\OneDrive\Desktop\micro_os-main" "C:\dev\micro_os"
+> ```
+>
+> Ask me before moving; it will change all paths in scripts.
+
+---
 
 ## Resources
 
-- [Writing an OS in Rust](https://os.phil-opp.com/): the tutorial this kind of project is usually based on, which covers VGA output, bootimage, and QEMU setup.
+- [Writing an OS in Rust](https://os.phil-opp.com/) — the tutorial series this
+  project is based on
+- [OSDev Wiki](https://wiki.osdev.org/) — reference for x86_64 internals
 
 ## License
 
-Add a license here (for example, MIT) if you plan to share or reuse this project.
+MIT (add `LICENSE` file when sharing publicly)

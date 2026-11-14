@@ -1,0 +1,7 @@
+CPU: Intel Core i5-1335U (10 cores: 2P + 8E, 12 threads)
+RAM: 16 GB LPDDR5
+Storage: 512 GB NVMe SSD
+WiFi: MediaTek MT7921 Wi-Fi 6 (PCIe / 802.11ax)
+GPU: Intel Iris Xe Graphics
+Architecture: x86_64
+Firmware / Boot Mode: UEFI (13th Gen Intel Mobile platforms are UEFI-only, Class 3 / no CSM)

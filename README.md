@@ -47,7 +47,7 @@ You can create a free account (Starter plan, 25 pages per month) and start proce
 - **Exception flags**: missing or unusual values are brought forward for focused human review.
 - **Party consistency**: keeps supplier and customer details organized across invoice records.
 - **Duplicate protection**: avoids duplicate entries using a normalized vendor + invoice number pair.
--
+-- **OCR fallback**: scanned or poor-quality PDFs are processed with Tesseract and Poppler when available.
 
 
 ### Exports
